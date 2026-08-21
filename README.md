@@ -1,33 +1,32 @@
 # ChatInk Releases
 
-Este repositorio público contiene exclusivamente binarios oficiales, sus hashes y metadatos de actualización de **ChatInk**. No contiene código fuente, configuración del servidor, certificados, keystores, tokens ni archivos de entorno.
+Este repositorio público contiene exclusivamente binarios oficiales y metadatos de actualización de **ChatInk**. El código fuente, la infraestructura y la configuración privada no se distribuyen aquí.
 
-## Estado actual
+## Versión actual
 
-Todavía no hay una versión pública publicada. El manifiesto [latest.json](latest.json) usa `release: null` hasta que una release estable esté disponible.
+La versión estable actual es [v0.1.0](https://github.com/A1VAR0W/ChatInk-Releases/releases/tag/v0.1.0).
 
-## Instalación Android
+## Descargas
 
-1. Descarga únicamente el APK de una GitHub Release de este repositorio.
-2. Descarga `SHA256SUMS` de la misma release y verifica el hash antes de instalar.
-3. Abre el APK. Android puede pedir autorización para instalar desde esa fuente.
+- [Android APK](https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.0/ChatInk-0.1.0.apk)
+- [iOS IPA para SideStore/AltStore](https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.0/ChatInk-0.1.0.ipa)
+- [SHA256SUMS](https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.0/SHA256SUMS)
 
-ChatInk no descarga ni instala APKs en segundo plano.
+## Verificación
+
+Descarga `SHA256SUMS` de la misma release y comprueba los hashes antes de instalar. En PowerShell:
 
 ```powershell
 Get-FileHash .\ChatInk-X.Y.Z.apk -Algorithm SHA256
+Get-FileHash .\ChatInk-X.Y.Z.ipa -Algorithm SHA256
 ```
 
-## iOS: SideStore / AltStore
+## iOS sideload
 
-Las versiones iOS se distribuyen como IPA para que SideStore o AltStore las firmen con la cuenta Apple del usuario. No son una instalación directa desde Safari ni una publicación de App Store.
-
-Añade esta fuente en SideStore o AltStore cuando exista la primera release:
+La fuente compatible con SideStore y AltStore está disponible en:
 
 ```text
 https://raw.githubusercontent.com/A1VAR0W/ChatInk-Releases/main/sidestore-source.json
 ```
 
-## Contenido permitido
-
-La rama `main` solo contiene `README.md`, `latest.json`, `sidestore-source.json` e `icon-512.png`. Los APK, IPA y `SHA256SUMS` se publican exclusivamente como assets de GitHub Releases.
+Los binarios de iOS se redistribuyen para que SideStore o AltStore los firmen con la cuenta Apple del usuario.

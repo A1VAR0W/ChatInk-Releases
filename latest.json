@@ -1,5 +1,23 @@
 {
   "schemaVersion": 1,
   "channel": "stable",
-  "release": null
+  "version": "0.1.0",
+  "versionCode": 1001,
+  "publishedAt": "2026-08-21T21:30:54.000Z",
+  "minimumSupportedVersion": null,
+  "mandatory": false,
+  "notes": [
+    "Publicación oficial de ChatInk v0.1.0."
+  ],
+  "android": {
+    "downloadUrl": "https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.0/ChatInk-0.1.0.apk",
+    "sha256": "97d45a124d84d80dc8cfa32a0ec0582554e0e597657e4f62b8bea21f14c87d1a",
+    "size": 3896266
+  },
+  "ios": {
+    "downloadUrl": "https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.0/ChatInk-0.1.0.ipa",
+    "sha256": "6a29cb89c738d614a411ba31ab816ddea2ea7092517862dcf5fc1fb468dc8879",
+    "size": 2323708
+  },
+  "releaseUrl": "https://github.com/A1VAR0W/ChatInk-Releases/releases/tag/v0.1.0"
 }

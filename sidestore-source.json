@@ -2,5 +2,29 @@
   "name": "ChatInk Official Releases",
   "identifier": "com.a1var0w.chatink.releases",
   "sourceURL": "https://raw.githubusercontent.com/A1VAR0W/ChatInk-Releases/main/sidestore-source.json",
-  "apps": []
+  "apps": [
+    {
+      "name": "ChatInk",
+      "bundleIdentifier": "com.doodledrop.app",
+      "developerName": "A1VAR0W",
+      "subtitle": "Chat efímero de texto, dibujo y archivos.",
+      "localizedDescription": "Cliente oficial de ChatInk para salas temporales con texto, dibujos y archivos.",
+      "iconURL": "https://raw.githubusercontent.com/A1VAR0W/ChatInk-Releases/main/icon-512.png",
+      "tintColor": "#6c5ce7",
+      "version": "0.1.0",
+      "versionDate": "2026-08-21T21:30:54.000Z",
+      "versionDescription": "Publicación oficial de ChatInk v0.1.0.",
+      "downloadURL": "https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.0/ChatInk-0.1.0.ipa",
+      "size": 2323708,
+      "versions": [
+        {
+          "version": "0.1.0",
+          "date": "2026-08-21T21:30:54.000Z",
+          "downloadURL": "https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.0/ChatInk-0.1.0.ipa",
+          "localizedDescription": "Publicación oficial de ChatInk v0.1.0.",
+          "size": 2323708
+        }
+      ]
+    }
+  ]
 }
