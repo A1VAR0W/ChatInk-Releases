@@ -4,13 +4,13 @@ Este repositorio público contiene exclusivamente binarios oficiales y metadatos
 
 ## Versión actual
 
-La versión estable actual es [v0.1.5](https://github.com/A1VAR0W/ChatInk-Releases/releases/tag/v0.1.5).
+La versión estable actual es [v0.1.6](https://github.com/A1VAR0W/ChatInk-Releases/releases/tag/v0.1.6).
 
 ## Descargas
 
-- [Android APK](https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.5/ChatInk-0.1.5.apk)
-- [iOS IPA para SideStore/AltStore](https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.5/ChatInk-0.1.5.ipa)
-- [SHA256SUMS](https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.5/SHA256SUMS)
+- [Android APK](https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.6/ChatInk-0.1.6.apk)
+- [iOS IPA para SideStore/AltStore](https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.6/ChatInk-0.1.6.ipa)
+- [SHA256SUMS](https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.6/SHA256SUMS)
 
 ## Verificación
 
