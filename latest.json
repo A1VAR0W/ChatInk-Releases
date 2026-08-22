@@ -1,23 +1,29 @@
 {
   "schemaVersion": 1,
   "channel": "stable",
-  "version": "0.1.0",
-  "versionCode": 1001,
-  "publishedAt": "2026-08-21T21:30:54.000Z",
-  "minimumSupportedVersion": null,
-  "mandatory": false,
-  "notes": [
-    "Publicación oficial de ChatInk v0.1.0."
-  ],
-  "android": {
-    "downloadUrl": "https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.0/ChatInk-0.1.0.apk",
-    "sha256": "97d45a124d84d80dc8cfa32a0ec0582554e0e597657e4f62b8bea21f14c87d1a",
-    "size": 3896266
-  },
-  "ios": {
-    "downloadUrl": "https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.0/ChatInk-0.1.0.ipa",
-    "sha256": "6a29cb89c738d614a411ba31ab816ddea2ea7092517862dcf5fc1fb468dc8879",
-    "size": 2323708
-  },
-  "releaseUrl": "https://github.com/A1VAR0W/ChatInk-Releases/releases/tag/v0.1.0"
+  "release": {
+    "tag": "v0.1.5",
+    "version": "0.1.5",
+    "versionCode": 1006,
+    "publishedAt": "2026-08-22T14:41:26.000Z",
+    "minimumSupportedVersion": null,
+    "mandatory": false,
+    "notes": [
+      "Publicación oficial de ChatInk v0.1.5."
+    ],
+    "releaseUrl": "https://github.com/A1VAR0W/ChatInk-Releases/releases/tag/v0.1.5",
+    "platforms": {
+      "android": {
+        "downloadUrl": "https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.5/ChatInk-0.1.5.apk",
+        "sha256": "c73137e164db47f57a46bc78fe4bd20694792b5f4fea2ea15facc3b411e56c93",
+        "size": 4696173
+      },
+      "ios": {
+        "downloadUrl": "https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.5/ChatInk-0.1.5.ipa",
+        "sha256": "bcfb04777b1fda8a691c53212748785c64879f0538306b34f2cf1740c42efc70",
+        "size": 2555304,
+        "sourceUrl": "https://raw.githubusercontent.com/A1VAR0W/ChatInk-Releases/main/sidestore-source.json"
+      }
+    }
+  }
 }
