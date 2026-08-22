@@ -1,0 +1,329 @@
+name: production-mobile
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Tag del repositorio privado Chat-Ink que se va a publicar (vMAJOR.MINOR.PATCH).
+        required: true
+        type: string
+      release_tag:
+        description: Tag público a crear; debe coincidir con source_ref.
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: chatink-production-${{ inputs.release_tag }}
+  cancel-in-progress: false
+
+jobs:
+  build-android:
+    name: Android production artifact
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    environment:
+      name: production
+    steps:
+      - name: Checkout private source at the release tag
+        uses: actions/checkout@v6
+        with:
+          repository: A1VAR0W/Chat-Ink
+          ref: ${{ inputs.source_ref }}
+          path: source
+          token: ${{ secrets.CHATINK_SOURCE_TOKEN }}
+          fetch-depth: 0
+
+      - name: Assert matching immutable tags
+        working-directory: source
+        shell: bash
+        env:
+          SOURCE_REF: ${{ inputs.source_ref }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          test "$SOURCE_REF" = "$RELEASE_TAG"
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          git rev-parse "$RELEASE_TAG^{commit}" >/dev/null
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: source/package-lock.json
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Install source dependencies
+        working-directory: source
+        run: npm ci
+
+      - name: Resolve release version
+        id: version
+        working-directory: source
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: node scripts/release/version.mjs --tag "$RELEASE_TAG" --github-output "$GITHUB_OUTPUT"
+
+      - name: Validate production endpoints
+        working-directory: source
+        shell: bash
+        env:
+          VITE_SERVER_URL: ${{ vars.PUBLIC_SERVER_URL }}
+          VITE_PUBLIC_APP_URL: ${{ vars.PUBLIC_APP_URL }}
+        run: node scripts/release/validate-public-urls.mjs --server "$VITE_SERVER_URL" --app "$VITE_PUBLIC_APP_URL"
+
+      - name: Build production PWA
+        working-directory: source
+        run: npm run build:pwa
+        env:
+          VITE_SERVER_URL: ${{ vars.PUBLIC_SERVER_URL }}
+          VITE_PUBLIC_APP_URL: ${{ vars.PUBLIC_APP_URL }}
+          VITE_APP_VERSION: ${{ steps.version.outputs.version }}
+          VITE_APP_VERSION_CODE: ${{ steps.version.outputs.version_code }}
+          VITE_RELEASE_TAG: ${{ inputs.release_tag }}
+          VITE_ENABLE_UPDATE_CHECKS: 'true'
+          VITE_UPDATE_MANIFEST_URL: https://raw.githubusercontent.com/A1VAR0W/ChatInk-Releases/main/latest.json
+
+      - name: Create and sync Capacitor Android project
+        working-directory: source/apps/client
+        run: |
+          npx cap add android
+          node ../../scripts/native/configure-projects.mjs
+          npm run assets:generate:android
+          npx cap sync android
+
+      - name: Build and sign Android APK
+        working-directory: source
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_VERSION_CODE: ${{ steps.version.outputs.version_code }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for secret_name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            [[ -n "${!secret_name:-}" ]] || { echo "Falta $secret_name en el entorno production." >&2; exit 1; }
+          done
+          keystore="$RUNNER_TEMP/chatink-production.keystore"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$keystore"
+          chmod 600 "$keystore"
+          cd apps/client/android
+          chmod +x ./gradlew
+          sed -Ei "s/versionCode [0-9]+/versionCode ${RELEASE_VERSION_CODE}/" app/build.gradle
+          sed -Ei "s/versionName \"[^\"]+\"/versionName \"${RELEASE_VERSION}\"/" app/build.gradle
+          ./gradlew clean assembleRelease --no-daemon --stacktrace
+          unsigned="app/build/outputs/apk/release/app-release-unsigned.apk"
+          tools_dir="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+          "$tools_dir/zipalign" -P 16 -f -v 4 "$unsigned" "$RUNNER_TEMP/ChatInk-aligned.apk"
+          "$tools_dir/apksigner" sign --ks "$keystore" --ks-key-alias "$ANDROID_KEY_ALIAS" --ks-pass env:ANDROID_KEYSTORE_PASSWORD --key-pass env:ANDROID_KEY_PASSWORD --out "$GITHUB_WORKSPACE/ChatInk-${RELEASE_VERSION}.apk" "$RUNNER_TEMP/ChatInk-aligned.apk"
+          "$tools_dir/apksigner" verify --verbose "$GITHUB_WORKSPACE/ChatInk-${RELEASE_VERSION}.apk"
+          sha256sum "$GITHUB_WORKSPACE/ChatInk-${RELEASE_VERSION}.apk" > "$GITHUB_WORKSPACE/ChatInk-${RELEASE_VERSION}.apk.sha256"
+          rm -f "$keystore" "$RUNNER_TEMP/ChatInk-aligned.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: production-android-${{ steps.version.outputs.version }}
+          path: |
+            ChatInk-${{ steps.version.outputs.version }}.apk
+            ChatInk-${{ steps.version.outputs.version }}.apk.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  build-ios:
+    name: iOS production artifact
+    runs-on: macos-26
+    timeout-minutes: 35
+    environment:
+      name: production
+    steps:
+      - name: Checkout private source at the release tag
+        uses: actions/checkout@v6
+        with:
+          repository: A1VAR0W/Chat-Ink
+          ref: ${{ inputs.source_ref }}
+          path: source
+          token: ${{ secrets.CHATINK_SOURCE_TOKEN }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: source/package-lock.json
+
+      - name: Install source dependencies
+        working-directory: source
+        run: npm ci
+
+      - name: Resolve release version
+        id: version
+        working-directory: source
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: node scripts/release/version.mjs --tag "$RELEASE_TAG" --github-output "$GITHUB_OUTPUT"
+
+      - name: Validate production endpoints
+        working-directory: source
+        shell: bash
+        env:
+          VITE_SERVER_URL: ${{ vars.PUBLIC_SERVER_URL }}
+          VITE_PUBLIC_APP_URL: ${{ vars.PUBLIC_APP_URL }}
+        run: node scripts/release/validate-public-urls.mjs --server "$VITE_SERVER_URL" --app "$VITE_PUBLIC_APP_URL"
+
+      - name: Build production PWA
+        working-directory: source
+        run: npm run build:pwa
+        env:
+          VITE_SERVER_URL: ${{ vars.PUBLIC_SERVER_URL }}
+          VITE_PUBLIC_APP_URL: ${{ vars.PUBLIC_APP_URL }}
+          VITE_APP_VERSION: ${{ steps.version.outputs.version }}
+          VITE_APP_VERSION_CODE: ${{ steps.version.outputs.version_code }}
+          VITE_RELEASE_TAG: ${{ inputs.release_tag }}
+          VITE_ENABLE_UPDATE_CHECKS: 'true'
+          VITE_UPDATE_MANIFEST_URL: https://raw.githubusercontent.com/A1VAR0W/ChatInk-Releases/main/latest.json
+
+      - name: Create and sync Capacitor iOS project
+        working-directory: source/apps/client
+        run: |
+          npx cap add ios --packagemanager CocoaPods
+          node ../../scripts/native/configure-projects.mjs
+          npm run assets:generate:ios
+          npx cap sync ios
+
+      - name: Build SideStore-compatible IPA
+        working-directory: source
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_VERSION_CODE: ${{ steps.version.outputs.version_code }}
+        run: |
+          set -euo pipefail
+          cd apps/client/ios/App
+          pod install --repo-update
+          cd ../../../..
+          xcodebuild -workspace apps/client/ios/App/App.xcworkspace -scheme App -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build/DerivedData MARKETING_VERSION="$RELEASE_VERSION" CURRENT_PROJECT_VERSION="$RELEASE_VERSION_CODE" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO clean build
+          package_root="$RUNNER_TEMP/chatink-ipa"
+          mkdir -p "$package_root/Payload"
+          ditto build/DerivedData/Build/Products/Release-iphoneos/App.app "$package_root/Payload/App.app"
+          (
+            cd "$package_root"
+            ditto -c -k --sequesterRsrc --keepParent Payload "$GITHUB_WORKSPACE/ChatInk-${RELEASE_VERSION}.ipa"
+          )
+          unzip -tq "$GITHUB_WORKSPACE/ChatInk-${RELEASE_VERSION}.ipa"
+          sha256sum "$GITHUB_WORKSPACE/ChatInk-${RELEASE_VERSION}.ipa" > "$GITHUB_WORKSPACE/ChatInk-${RELEASE_VERSION}.ipa.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: production-ios-${{ steps.version.outputs.version }}
+          path: |
+            ChatInk-${{ steps.version.outputs.version }}.ipa
+            ChatInk-${{ steps.version.outputs.version }}.ipa.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish production release and update metadata
+    needs: [build-android, build-ios]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: production
+    steps:
+      - name: Checkout the public distribution repository
+        uses: actions/checkout@v6
+        with:
+          path: public-release-repository
+
+      - name: Checkout private release tooling
+        uses: actions/checkout@v6
+        with:
+          repository: A1VAR0W/Chat-Ink
+          ref: ${{ inputs.source_ref }}
+          path: source
+          token: ${{ secrets.CHATINK_SOURCE_TOKEN }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: source/package-lock.json
+
+      - name: Install release tooling dependencies
+        working-directory: source
+        run: npm ci
+
+      - name: Resolve release version
+        id: version
+        working-directory: source
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: node scripts/release/version.mjs --tag "$RELEASE_TAG" --github-output "$GITHUB_OUTPUT"
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: production-*
+          merge-multiple: true
+          path: release-artifacts
+
+      - name: Verify and publish immutable assets
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          apk="release-artifacts/ChatInk-${RELEASE_VERSION}.apk"
+          ipa="release-artifacts/ChatInk-${RELEASE_VERSION}.ipa"
+          test -s "$apk"
+          test -s "$ipa"
+          unzip -tq "$ipa"
+          sha256sum "$apk" "$ipa" > release-artifacts/SHA256SUMS
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "La release $RELEASE_TAG ya existe; no se sobrescribirá." >&2
+            exit 1
+          fi
+          gh release create "$RELEASE_TAG" "$apk" "$ipa" release-artifacts/SHA256SUMS --title "ChatInk ${RELEASE_VERSION}" --notes "Official ChatInk release v${RELEASE_VERSION}."
+
+      - name: Generate and publish update metadata
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          published_at="$(date --utc --iso-8601=seconds)"
+          cp source/apps/client/public/icons/icon-512.png public-release-repository/icon-512.png
+          node source/scripts/release/generate-public-metadata.mjs \
+            --output-directory public-release-repository \
+            --tag "$RELEASE_TAG" \
+            --published-at "$published_at" \
+            --apk-sha256 "$(sha256sum "release-artifacts/ChatInk-${RELEASE_VERSION}.apk" | awk '{print $1}')" \
+            --ipa-sha256 "$(sha256sum "release-artifacts/ChatInk-${RELEASE_VERSION}.ipa" | awk '{print $1}')" \
+            --apk-size "$(stat --format='%s' "release-artifacts/ChatInk-${RELEASE_VERSION}.apk")" \
+            --ipa-size "$(stat --format='%s' "release-artifacts/ChatInk-${RELEASE_VERSION}.ipa")" \
+            --mode publish
+          node source/scripts/release/validate-public-metadata.mjs --directory public-release-repository
+          git -C public-release-repository config user.name 'chatink-release-bot'
+          git -C public-release-repository config user.email 'chatink-release-bot@users.noreply.github.com'
+          git -C public-release-repository add README.md latest.json sidestore-source.json icon-512.png
+          git -C public-release-repository diff --cached --quiet || git -C public-release-repository commit -m "release: publish ChatInk v${RELEASE_VERSION}"
+          git -C public-release-repository push origin HEAD:main
