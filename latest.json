@@ -2,26 +2,26 @@
   "schemaVersion": 1,
   "channel": "stable",
   "release": {
-    "tag": "v0.1.7",
-    "version": "0.1.7",
-    "versionCode": 2016,
-    "publishedAt": "2026-08-22T16:22:15.000Z",
-    "minimumSupportedVersion": null,
-    "mandatory": false,
+    "tag": "v0.1.8",
+    "version": "0.1.8",
+    "versionCode": 2018,
+    "publishedAt": "2026-08-22T18:03:26.000Z",
+    "minimumSupportedVersion": "0.1.8",
+    "mandatory": true,
     "notes": [
-      "Publicación oficial de ChatInk v0.1.7."
+      "Publicación oficial de ChatInk v0.1.8."
     ],
-    "releaseUrl": "https://github.com/A1VAR0W/ChatInk-Releases/releases/tag/v0.1.7",
+    "releaseUrl": "https://github.com/A1VAR0W/ChatInk-Releases/releases/tag/v0.1.8",
     "platforms": {
       "android": {
-        "downloadUrl": "https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.7/ChatInk-0.1.7.apk",
-        "sha256": "bbafeed88614b2be56b37993bafec65e768ac3a868ef976da818aaa36d4f4bef",
-        "size": 4696173
+        "downloadUrl": "https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.8/ChatInk-0.1.8.apk",
+        "sha256": "05d4322b8742623be3109f5f01b814c42d827c9fa8d9f9aba9d3f04272cce28a",
+        "size": 4700381
       },
       "ios": {
-        "downloadUrl": "https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.7/ChatInk-0.1.7.ipa",
-        "sha256": "dc5a3f3f3a3b302d0b1318f6f2e732056861ea0fde58a1b519d0645d1ae3844b",
-        "size": 2555276,
+        "downloadUrl": "https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.8/ChatInk-0.1.8.ipa",
+        "sha256": "0a2ed22b01dcf3dd1d1181094277422606d3f22915bc615c8283e00ede11b78a",
+        "size": 2573736,
         "sourceUrl": "https://raw.githubusercontent.com/A1VAR0W/ChatInk-Releases/main/sidestore-source.json"
       }
     }
