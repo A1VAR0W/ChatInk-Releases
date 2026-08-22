@@ -11,12 +11,19 @@
       "localizedDescription": "Cliente oficial de ChatInk para salas temporales con texto, dibujos y archivos.",
       "iconURL": "https://raw.githubusercontent.com/A1VAR0W/ChatInk-Releases/main/icon-512.png",
       "tintColor": "#6c5ce7",
-      "version": "0.1.6",
-      "versionDate": "2026-08-22T15:46:04.000Z",
-      "versionDescription": "Publicación oficial de ChatInk v0.1.6.",
-      "downloadURL": "https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.6/ChatInk-0.1.6.ipa",
-      "size": 2555241,
+      "version": "0.1.7",
+      "versionDate": "2026-08-22T16:22:15.000Z",
+      "versionDescription": "Publicación oficial de ChatInk v0.1.7.",
+      "downloadURL": "https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.7/ChatInk-0.1.7.ipa",
+      "size": 2555276,
       "versions": [
+        {
+          "version": "0.1.7",
+          "date": "2026-08-22T16:22:15.000Z",
+          "downloadURL": "https://github.com/A1VAR0W/ChatInk-Releases/releases/download/v0.1.7/ChatInk-0.1.7.ipa",
+          "localizedDescription": "Publicación oficial de ChatInk v0.1.7.",
+          "size": 2555276
+        },
         {
           "version": "0.1.6",
           "date": "2026-08-22T15:46:04.000Z",
